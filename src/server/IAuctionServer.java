@@ -13,7 +13,7 @@ import java.util.Map;
  winning bid, price not met, etc.).
  */
 public interface IAuctionServer extends Remote {
-    public int createAuctionItem(String name, float minVal, int closingTime) throws RemoteException;
+    public int createAuctionItem(String name, float minVal, long closingTime) throws RemoteException;
     public int bid(int auctionItemId, float amount) throws RemoteException;
     public String getListing() throws RemoteException;
 }
