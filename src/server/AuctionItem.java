@@ -4,11 +4,12 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Observable;
 
 /**
  * Created by justas on 04/11/16.
  */
-public class AuctionItem implements Serializable {
+public class AuctionItem extends Observable implements Serializable {
     private static final long serialVersionUID = 1L;
 
     protected enum Codes {
@@ -31,15 +32,17 @@ public class AuctionItem implements Serializable {
     private String name;
     private float minBid;
     private Date startDate, closingDate;
+//    private boolean open;
 
     public AuctionItem(String name, float minBid, long closingTime) {
         this.startDate = new Date(System.currentTimeMillis());
-        this.closingDate = new Date(closingTime);
+        this.closingDate = new Date(System.currentTimeMillis() + 1000 * closingTime);
         this.id = idCounter;
         idCounter += 1;
         this.name = name;
         this.bids = new LinkedList<Bid>();
         this.minBid = minBid;
+//        this.open = true;
     }
 
     public synchronized int makeBid(Bid b) {

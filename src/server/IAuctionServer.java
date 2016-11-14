@@ -1,5 +1,7 @@
 package server;
 
+import client.IAuctionClient;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Map;
@@ -13,7 +15,8 @@ import java.util.Map;
  winning bid, price not met, etc.).
  */
 public interface IAuctionServer extends Remote {
-    public int createAuctionItem(String name, float minVal, long closingTime) throws RemoteException;
-    public int bid(int auctionItemId, float amount) throws RemoteException;
-    public String getListing() throws RemoteException;
+    public int createAuctionItem(IAuctionClient owner, String name, float minVal, long closingTime) throws RemoteException;
+    public int bid(IAuctionClient owner, int auctionItemId, float amount) throws RemoteException;
+    public String getOpenAuctions() throws RemoteException;
+    public String getClosedAuctions() throws RemoteException;
 }

@@ -1,5 +1,7 @@
 package server;
 
+import client.IAuctionClient;
+
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 
@@ -12,11 +14,11 @@ public class Bid implements Serializable {
     private static int idCounter = 0;
     private int id;
 
-    private final String owner;
+    private final IAuctionClient owner;
     private final float amount;
     private final long timestamp;
 
-    public Bid(String owner, float amount) {
+    public Bid(IAuctionClient owner, float amount) {
         this.owner = owner;
         this.amount = amount;
         this.timestamp = System.currentTimeMillis();
@@ -24,7 +26,7 @@ public class Bid implements Serializable {
         idCounter++;
     }
 
-    public String getOwner() {
+    public IAuctionClient getOwner() {
         return owner;
     }
 
