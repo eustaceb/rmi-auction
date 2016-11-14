@@ -19,9 +19,10 @@ public class TestClasses {
         System.out.println(auctionItem2);
         System.out.println(auctionItem3);
 
-        ArrayList<String> names = new ArrayList<String>(Arrays.asList("John", "Alex", "Bender", "Jess", "Chris", "Alberto", "Xin", "Jack", "Spencer", "Mark", "Lorenzo", "Peter", "Miranda"));
+        ArrayList<String> names = new ArrayList<>(Arrays.asList("John", "Alex", "Bender", "Jess", "Chris", "Alberto", "Xin", "Jack", "Spencer", "Mark", "Lorenzo", "Peter", "Miranda"));
         for (String name : names) {
-            auctionItem1.makeBid(new Bid(name, new Random().nextFloat() * 100));
+            // TODO: Replace null
+            auctionItem1.makeBid(new Bid(null, new Random().nextFloat() * 100));
         }
         System.out.println(auctionItem1);
         System.out.println(auctionItem1.getBidListStr());

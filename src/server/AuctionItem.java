@@ -40,7 +40,7 @@ public class AuctionItem extends Observable implements Serializable {
         this.id = idCounter;
         idCounter += 1;
         this.name = name;
-        this.bids = new LinkedList<Bid>();
+        this.bids = new LinkedList<>();
         this.minBid = minBid;
 //        this.open = true;
     }
@@ -129,7 +129,7 @@ public class AuctionItem extends Observable implements Serializable {
                 timeLeftStr = String.valueOf(timeDiff / 1000) + "s";
             } else if (timeDiff >= 60 * 1000 && timeDiff < 60 * 60 * 1000) {
                 timeLeftStr = String.valueOf(timeDiff / 1000 / 60) + "min " + (timeDiff / 1000) % 60 + "s";
-            } else {
+            } else if (timeDiff >= 60 * 60 * 1000) {
                 timeLeftStr = String.valueOf(timeDiff / 1000 / 60 / 60) + "h " + (timeDiff / 1000 / 60) % 60 + "min";
             }
 

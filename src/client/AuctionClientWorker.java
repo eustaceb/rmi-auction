@@ -1,9 +1,6 @@
 package client;
 
-import server.Bid;
 import server.IAuctionServer;
-
-import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +16,7 @@ public class AuctionClientWorker implements Runnable, IAuctionClient {
     private String name;
 
     public AuctionClientWorker(IAuctionServer auctionSrv) {
-        ArrayList<String> names = new ArrayList<String>(Arrays.asList(
+        ArrayList<String> names = new ArrayList<>(Arrays.asList(
                 "John", "Alex", "Bender", "Jess", "Chris", "Alberto", "Xin", "Jack",
                 "Spencer", "Mark", "Lorenzo", "Peter", "Miranda"));
         this.name = names.get(new Random().nextInt(names.size()));

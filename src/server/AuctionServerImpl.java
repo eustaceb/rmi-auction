@@ -35,12 +35,12 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
 
     public AuctionServerImpl() throws RemoteException {
         super();
-        auctionItems = new HashMap<Integer, AuctionItem>();
-        closedAuctionItems = new HashMap<Integer, AuctionItem>();
+        auctionItems = new HashMap<>();
+        closedAuctionItems = new HashMap<>();
         timer = new Timer();
     }
     private void sampleData(){
-        ArrayList<String> items = new ArrayList<String>(Arrays.asList(
+        ArrayList<String> items = new ArrayList<>(Arrays.asList(
                 "Shoe made from potatoes", "Caged goat", "Rock", "Movie II", "Movie III", "Jungle Bubble",
                 "Curse", "Potato", "Crocodile tears", "Lobster", "Dust", "TV", "Burbonic plague", "Glowing mushroom"));
 

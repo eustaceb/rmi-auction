@@ -1,22 +1,7 @@
 package client;
 
-/**
- * Created by justas on 04/11/16.
- */
-import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
-import server.IAuctionServer;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Observable;
-import java.util.Random;
 
 /**
  * Created by justas on 03/11/16.
