@@ -4,7 +4,6 @@ import server.IAuctionServer;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Observable;
 import java.util.Random;
 
 /**
@@ -51,7 +50,10 @@ public class AuctionClientWorker implements Runnable, IAuctionClient {
     }
 
     @Override
-    public void callback(String message) {
+    public String getName() throws RemoteException { return name; }
+
+    @Override
+    public void callback(String message) throws RemoteException {
         System.out.println(message);
     }
 }

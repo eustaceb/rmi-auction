@@ -15,17 +15,21 @@ public class Bid implements Serializable {
     private int id;
 
     private final IAuctionClient owner;
+    private final String ownerName;
     private final float amount;
     private final long timestamp;
 
-    public Bid(IAuctionClient owner, float amount) {
+    public Bid(IAuctionClient owner, String ownerName, float amount) {
         this.owner = owner;
+        // REPORT: Discrepancy between owner/ownerName
+        this.ownerName = ownerName;
         this.amount = amount;
         this.timestamp = System.currentTimeMillis();
         this.id = idCounter;
         idCounter++;
     }
 
+    public String getOwnerName() { return ownerName; }
     public IAuctionClient getOwner() {
         return owner;
     }
@@ -41,9 +45,8 @@ public class Bid implements Serializable {
     @Override
     public String toString() {
         SimpleDateFormat dF = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-        StringBuilder sb = new StringBuilder("Bid ID:");
-        sb.append(id).append(" Amount:").append(amount).append(" - by ");
-        sb.append(owner).append(" @ ").append(dF.format(timestamp));
+        StringBuilder sb = new StringBuilder("Amount - ");
+        sb.append(amount).append(" @ ").append(dF.format(timestamp));
         return sb.toString();
     }
 }

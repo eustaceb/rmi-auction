@@ -4,6 +4,7 @@ import client.IAuctionClient;
 import javafx.util.Pair;
 
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 /**
@@ -17,10 +18,11 @@ public class AuctionItem implements Serializable {
 
     private IAuctionClient owner;
     private LinkedList<Bid> bids;
+
     private Set<IAuctionClient> observers;
     private String name;
-    private float minBid;
-    private Date startDate, closingDate;
+    private final float minBid;
+    private final Date startDate, closingDate;
 
     public AuctionItem(IAuctionClient owner, String name, float minBid, long closingTime) {
         this.owner = owner;
@@ -31,7 +33,18 @@ public class AuctionItem implements Serializable {
         this.name = name;
         this.bids = new LinkedList<>();
         this.observers = new HashSet<>();
+        this.observers.add(owner);
         this.minBid = minBid;
+    }
+
+    public void notifyObservers(String message) {
+        for (IAuctionClient client : observers) {
+            try {
+                client.callback(message);
+            } catch (RemoteException e) {
+                System.err.println("Unable to access client - " + e);
+            }
+        }
     }
 
     public synchronized String makeBid(Bid b) {
@@ -51,10 +64,14 @@ public class AuctionItem implements Serializable {
         observers.add(b.getOwner());
         // Notify clients about the new bid
         for (IAuctionClient client : observers) {
-            if (client == b.getOwner()) {
-                client.callback("You're the max bidder with " + b.getAmount());
-            } else {
-                client.callback("You've been outbid on " + this.getName());
+            try {
+                if (client == b.getOwner()) {
+                    client.callback("You're the max bidder with " + b.getAmount());
+                } else if (client != getOwner()){
+                    client.callback("You've been outbid on " + this.getName());
+                }
+            } catch (RemoteException e) {
+                System.err.println("Unable to access client - " + e);
             }
         }
         return ErrorCodes.SUCCESS_BID.MESSAGE;
@@ -99,24 +116,23 @@ public class AuctionItem implements Serializable {
         return minBid;
     }
 
-    public void setMinBid(float minBid) {
-        this.minBid = minBid;
-    }
+    public Set<IAuctionClient> getObservers() { return observers; }
+
+    public void setObservers(Set<IAuctionClient> observers) { this.observers = observers; }
+
+    public Date getStartDate() { return startDate; }
+
+
+    public Date getClosingDate() { return closingDate; }
+
 
     public long getClosingTime() {
         return this.closingDate.getTime();
     }
 
-    public void setClosingTime(long closingTime) {
-        this.closingDate = new Date(closingTime);
-    }
 
     public long getStartTime() {
         return this.startDate.getTime();
-    }
-
-    public void setStartTime(long startTime) {
-        this.startDate = new Date(startTime);
     }
 
     public String getBidListStr() {
@@ -134,23 +150,32 @@ public class AuctionItem implements Serializable {
             Bid currentBid = getCurrentBid();
             SimpleDateFormat dF = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 
-            String timeLeftStr = "has ended";
-            long timeDiff = closingDate.getTime() - startDate.getTime();
-            if (timeDiff > 0 && timeDiff < 60 * 1000) {
-                timeLeftStr = String.valueOf(timeDiff / 1000) + "s";
-            } else if (timeDiff >= 60 * 1000 && timeDiff < 60 * 60 * 1000) {
-                timeLeftStr = String.valueOf(timeDiff / 1000 / 60) + "min " + (timeDiff / 1000) % 60 + "s";
-            } else if (timeDiff >= 60 * 60 * 1000) {
-                timeLeftStr = String.valueOf(timeDiff / 1000 / 60 / 60) + "h " + (timeDiff / 1000 / 60) % 60 + "min";
+            long timeDiff = closingDate.getTime() - System.currentTimeMillis();
+            boolean hasEnded = timeDiff <= 0;
+            String timeLeftStr = "";
+            if (!hasEnded) {
+                if (timeDiff < 60 * 1000) {
+                    timeLeftStr = String.valueOf(timeDiff / 1000) + "s";
+                } else if (timeDiff >= 60 * 1000 && timeDiff < 60 * 60 * 1000) {
+                    timeLeftStr = String.valueOf(timeDiff / 1000 / 60) + "min " + (timeDiff / 1000) % 60 + "s";
+                } else if (timeDiff >= 60 * 60 * 1000) {
+                    timeLeftStr = String.valueOf(timeDiff / 1000 / 60 / 60) + "h " + (timeDiff / 1000 / 60) % 60 + "min";
+                }
             }
-
             StringBuilder result = new StringBuilder("Auction Item #");
             result.append(id).append(": ").append(name).append("\n");
             result.append("Minimum bid: ").append(minBid).append("\n");
-            result.append("Current bid: ").append(currentBid == null ? "none" : currentBid).append("\n");
+            if (hasEnded) {
+                result.append("Winning bid: ").append(currentBid)
+                        .append(" by ").append(currentBid.getOwnerName()).append("\n");
+            } else {
+                result.append("Current bid: ").append(currentBid == null ? "none" : currentBid).append("\n");
+            }
             result.append("Start date: ").append(dF.format(startDate)).append("\n");
             result.append("Closing date: ").append(dF.format(closingDate)).append("\n");
-            result.append("Time left: ").append(timeLeftStr);
+            if (!hasEnded) {
+                result.append("Time left: ").append(timeLeftStr);
+            }
             return result.toString();
         }
     }

@@ -1,44 +1,26 @@
 package client;
 
+import java.io.Serializable;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Observable;
+import java.rmi.server.UnicastRemoteObject;
 
 /**
  * Created by justas on 03/11/16.
  */
-public class AuctionClient implements IAuctionClient {
+public class AuctionClient extends UnicastRemoteObject implements IAuctionClient {
+    private String name;
 
-    private int port;
-    private String host, name;
-
-    protected AuctionClient() throws RemoteException {
+    public AuctionClient() throws RemoteException {
         super();
+        this.name = "Name not set";
     }
-
-    protected AuctionClient(String host, int port) throws RemoteException {
+    public AuctionClient(String name) throws RemoteException {
         super();
-        this.host = host;
-        this.port = port;
+        this.name = name;
     }
 
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public String getName() {
+    public String getName() throws RemoteException {
         return name;
     }
 
@@ -46,15 +28,14 @@ public class AuctionClient implements IAuctionClient {
         this.name = name;
     }
 
-
     @Override
-    public void callback(String message) {
+    public void callback(String message) throws RemoteException {
         System.out.println(message);
     }
 
     @Override
     public String toString() {
-        return getName();
+        return name;
     }
 
 }

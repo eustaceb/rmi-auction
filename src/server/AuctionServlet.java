@@ -17,9 +17,10 @@ public class AuctionServlet {
             port = Integer.parseInt(args[1]);
         }
 
-        if (System.getSecurityManager() == null) {
-            System.setSecurityManager(new RMISecurityManager());
-        }
+        System.setProperty("java.security.policy", "file:///home/justas/Uni/DAS/Auction/out/production/RMIAuction/server/policyf.txt");
+        //if (System.getSecurityManager() == null) {
+        //    System.setSecurityManager(new RMISecurityManager());
+        //}
         try {
             LocateRegistry.createRegistry(port);
             IAuctionServer auction = new AuctionServerImpl();

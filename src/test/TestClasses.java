@@ -12,7 +12,7 @@ import java.util.Random;
  */
 public class TestClasses {
     public static void main(String args[]) {
-        AuctionItem auctionItem1 = new AuctionItem("Boxers", 5.0f, System.currentTimeMillis() + 55*1000);
+        /*AuctionItem auctionItem1 = new AuctionItem("Boxers", 5.0f, System.currentTimeMillis() + 55*1000);
         AuctionItem auctionItem2 = new AuctionItem("Boxers", 5.0f, System.currentTimeMillis() + 35*22*1000);
         AuctionItem auctionItem3 = new AuctionItem("Boxers", 5.0f, System.currentTimeMillis() + 50*44*60*1000);
         System.out.println(auctionItem1);
@@ -26,6 +26,6 @@ public class TestClasses {
         }
         System.out.println(auctionItem1);
         System.out.println(auctionItem1.getBidListStr());
-        //auctionItem1.makeBid()
+        //auctionItem1.makeBid()*/
     }
 }
