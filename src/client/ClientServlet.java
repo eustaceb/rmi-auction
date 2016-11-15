@@ -47,9 +47,10 @@ public class ClientServlet {
                 System.out.println("b - Bid");
                 System.out.println("t - Test system with some AuctionClientWorkers");
                 System.out.println("q - Quit");
+                String response = "";
                 switch (br.readLine().toLowerCase()) {
                     case "l":
-                        System.out.print(auctionSrv.getOpenAuctions());
+                        response = auctionSrv.getOpenAuctions();
                         break;
                     case "n":
                         System.out.print("Item name: ");
@@ -58,18 +59,17 @@ public class ClientServlet {
                         float startPrice = Float.valueOf(br.readLine());
                         System.out.print("\nEnd auction in x seconds: ");
                         long endTime = Long.valueOf(br.readLine());
-                        int id = auctionSrv.createAuctionItem(client, name, startPrice, endTime);
-                        System.out.format("\nAuction ID %d created successfully.\n", id);
+                        response = auctionSrv.createAuctionItem(client, name, startPrice, endTime);
                         break;
                     case "b":
                         System.out.print("Acution item ID: ");
                         int auctionItemId = Integer.valueOf(br.readLine());
                         System.out.print("\nAmount: ");
                         float bidAmount = Float.valueOf(br.readLine());
-                        auctionSrv.bid(client, auctionItemId, bidAmount);
+                        response = auctionSrv.bid(client, auctionItemId, bidAmount);
                         break;
                     case "t":
-                        System.out.println("How many?");
+                        System.out.print("How many? ");
                         int noOfWorkers = Integer.valueOf(br.readLine());
                         for (int i = 0; i < noOfWorkers; i++) {
                             new Thread(new AuctionClientWorker(auctionSrv)).start();
@@ -81,6 +81,7 @@ public class ClientServlet {
                     default:
                         break;
                 }
+                System.out.println(response);
             }
         } catch (IOException e) {
             System.err.println("Unable to parse your input " + e);

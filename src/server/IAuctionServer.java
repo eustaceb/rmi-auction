@@ -14,8 +14,8 @@ import java.rmi.RemoteException;
  winning bid, price not met, etc.).
  */
 public interface IAuctionServer extends Remote {
-    int createAuctionItem(IAuctionClient owner, String name, float minVal, long closingTime) throws RemoteException;
-    int bid(IAuctionClient owner, int auctionItemId, float amount) throws RemoteException;
+    String createAuctionItem(IAuctionClient owner, String name, float minVal, long closingTime) throws RemoteException;
+    String bid(IAuctionClient owner, int auctionItemId, float amount) throws RemoteException;
     String getOpenAuctions() throws RemoteException;
     String getClosedAuctions() throws RemoteException;
 }

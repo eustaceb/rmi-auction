@@ -4,8 +4,11 @@ import java.rmi.Remote;
 import java.util.Observer;
 
 /**
- * Created by justas on 08/11/16.
+ * Auction Client Data Model
  */
-public interface IAuctionClient extends Remote, Observer {
+// REPORT: Thought about having this as an observer to observe AuctionItem but that lets clients modify items.
+public interface IAuctionClient extends Remote{
+
+    public void callback(String message);
 
 }

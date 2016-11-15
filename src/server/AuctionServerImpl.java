@@ -6,6 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
+// REPORT: All error checking is done in the server
 public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionServer {
 
     private final long CLOSED_ITEM_CLEANUP_PERIOD = 60 * (60 * 1000); // 60min
@@ -58,19 +59,26 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
     }
 
     @Override
-    public int createAuctionItem(IAuctionClient owner, String name, float minVal, long closingTime) throws RemoteException {
-        AuctionItem item = new AuctionItem(name, minVal, closingTime);
+    public String createAuctionItem(IAuctionClient owner, String name, float minVal, long closingTime) throws RemoteException {
+        if (owner == null) return ErrorCodes.OWNER_NULL.MESSAGE;
+        if (name == null) return ErrorCodes.NAME_NULL.MESSAGE;
+        if (name.length() == 0) return ErrorCodes.NAME_EMPTY.MESSAGE;
+        if (minVal < 0) return ErrorCodes.NEGATIVE_MINVAL.MESSAGE;
+        if (closingTime < 0) return ErrorCodes.NEGATIVE_CLOSING_TIME.MESSAGE;
+
+        AuctionItem item = new AuctionItem(owner, name, minVal, closingTime);
         auctionItems.put(item.getId(), item);
-        // TODO: Add observer
-        return item.getId();
+        return ErrorCodes.ITEM_CREATED.MESSAGE;
     }
 
     @Override
-    public int bid(IAuctionClient owner, int auctionItemId, float amount) throws RemoteException {
+    public String bid(IAuctionClient owner, int auctionItemId, float amount) throws RemoteException {
+        if (owner == null) return ErrorCodes.OWNER_NULL.MESSAGE;
+        AuctionItem item = auctionItems.get(auctionItemId);
+        if (item == null) return ErrorCodes.AUCTION_DOES_NOT_EXIST.MESSAGE;
+        if (item.getOwner() == owner) return ErrorCodes.BID_ON_OWN_ITEM.MESSAGE;
         Bid b = new Bid(owner, amount);
-        auctionItems.get(auctionItemId).makeBid(b);
-        // TODO: Add observer
-        return 0;
+        return item.makeBid(b);
     }
 
     @Override

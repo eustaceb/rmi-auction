@@ -1,60 +1,63 @@
 package server;
 
+import client.IAuctionClient;
+import javafx.util.Pair;
+
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.Observable;
-
+import java.util.*;
 /**
  * Created by justas on 04/11/16.
  */
-public class AuctionItem extends Observable implements Serializable {
+public class AuctionItem implements Serializable {
     private static final long serialVersionUID = 1L;
-
-    protected enum Codes {
-        AUCTION_CLOSED(-1, "The auction is closed"),
-        LOW_BID(0, "The bid is too low"),
-        SUCCESS_BID(1, "The bid was successful.");
-        public final int ID;
-        public final String MESSAGE;
-        Codes(int id, String msg) { this.ID = id; this.MESSAGE = msg; }
-        @Override
-        public String toString() {
-            return "Error " + ID + ": " + MESSAGE;
-        }
-    }
 
     private static int idCounter = 0;
     private int id;
 
+    private IAuctionClient owner;
     private LinkedList<Bid> bids;
+    private Set<IAuctionClient> observers;
     private String name;
     private float minBid;
     private Date startDate, closingDate;
-//    private boolean open;
 
-    public AuctionItem(String name, float minBid, long closingTime) {
+    public AuctionItem(IAuctionClient owner, String name, float minBid, long closingTime) {
+        this.owner = owner;
         this.startDate = new Date(System.currentTimeMillis());
         this.closingDate = new Date(System.currentTimeMillis() + 1000 * closingTime);
         this.id = idCounter;
         idCounter += 1;
         this.name = name;
         this.bids = new LinkedList<>();
+        this.observers = new HashSet<>();
         this.minBid = minBid;
-//        this.open = true;
     }
 
-    public synchronized int makeBid(Bid b) {
+    public synchronized String makeBid(Bid b) {
+        Bid currentBid = getCurrentBid();
         if (closingDate.getTime() - startDate.getTime() < 0) {
-            return Codes.AUCTION_CLOSED.ID;
-        } else if (getCurrentBid() != null && b.getAmount() <= getCurrentBid().getAmount()) {
-            return Codes.LOW_BID.ID;
+            return ErrorCodes.AUCTION_CLOSED.MESSAGE;
         } else if (b.getAmount() <= minBid) {
-            return Codes.LOW_BID.ID;
+            return ErrorCodes.LOW_BID.MESSAGE;
+        } else if (currentBid != null) {
+            if (b.getAmount() <= currentBid.getAmount()) {
+                return ErrorCodes.LOW_BID.MESSAGE;
+            } else if (b.getOwner() == currentBid.getOwner()) {
+                return ErrorCodes.ALREADY_MAX_BIDDER.MESSAGE;
+            }
         }
         bids.push(b);
-        return Codes.SUCCESS_BID.ID;
+        observers.add(b.getOwner());
+        // Notify clients about the new bid
+        for (IAuctionClient client : observers) {
+            if (client == b.getOwner()) {
+                client.callback("You're the max bidder with " + b.getAmount());
+            } else {
+                client.callback("You've been outbid on " + this.getName());
+            }
+        }
+        return ErrorCodes.SUCCESS_BID.MESSAGE;
     }
 
     public synchronized Bid getCurrentBid() {
@@ -66,6 +69,14 @@ public class AuctionItem extends Observable implements Serializable {
 
     public int getId() {
         return id;
+    }
+
+    public IAuctionClient getOwner() {
+        return owner;
+    }
+
+    public void setOwner(IAuctionClient owner) {
+        this.owner = owner;
     }
 
     public LinkedList<Bid> getBids() {
@@ -139,7 +150,7 @@ public class AuctionItem extends Observable implements Serializable {
             result.append("Current bid: ").append(currentBid == null ? "none" : currentBid).append("\n");
             result.append("Start date: ").append(dF.format(startDate)).append("\n");
             result.append("Closing date: ").append(dF.format(closingDate)).append("\n");
-            result.append("Time left: ").append(timeLeftStr).append("\n");
+            result.append("Time left: ").append(timeLeftStr);
             return result.toString();
         }
     }
