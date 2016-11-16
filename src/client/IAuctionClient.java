@@ -1,9 +1,7 @@
 package client;
 
-import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Observer;
 
 /**
  * Auction Client Data Model

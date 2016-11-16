@@ -11,9 +11,6 @@ import java.text.SimpleDateFormat;
 public class Bid implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private static int idCounter = 0;
-    private int id;
-
     private final IAuctionClient owner;
     private final String ownerName;
     private final float amount;
@@ -25,8 +22,6 @@ public class Bid implements Serializable {
         this.ownerName = ownerName;
         this.amount = amount;
         this.timestamp = System.currentTimeMillis();
-        this.id = idCounter;
-        idCounter++;
     }
 
     public String getOwnerName() { return ownerName; }

@@ -18,4 +18,5 @@ public interface IAuctionServer extends Remote {
     String bid(IAuctionClient owner, int auctionItemId, float amount) throws RemoteException;
     String getOpenAuctions() throws RemoteException;
     String getClosedAuctions() throws RemoteException;
+    void probe() throws RemoteException;
 }

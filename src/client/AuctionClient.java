@@ -1,7 +1,5 @@
 package client;
 
-import java.io.Serializable;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -9,6 +7,7 @@ import java.rmi.server.UnicastRemoteObject;
  * Created by justas on 03/11/16.
  */
 public class AuctionClient extends UnicastRemoteObject implements IAuctionClient {
+    private static final long serialVersionUID = 1L;
     private String name;
 
     public AuctionClient() throws RemoteException {

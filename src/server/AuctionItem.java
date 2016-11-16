@@ -1,7 +1,6 @@
 package server;
 
 import client.IAuctionClient;
-import javafx.util.Pair;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;

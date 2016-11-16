@@ -6,11 +6,11 @@ import client.IAuctionClient;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
-
 // REPORT: All error checking is done in the server
 // TODO: Logger instead of System out/err
 public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionServer {
-
+    static final long serialVersionUID = 1L;
+    
     private final long CLOSED_ITEM_CLEANUP_PERIOD = 60 * (60 * 1000); // 60min
     private class LifecycleAuctionItemTask extends TimerTask {
         private int id;
@@ -118,4 +118,6 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         }
         return result.toString();
     }
+    @Override
+    public void probe() throws RemoteException {}
 }
