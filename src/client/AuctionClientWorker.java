@@ -20,6 +20,10 @@ public class AuctionClientWorker implements Runnable, IAuctionClient {
                 "Spencer", "Mark", "Lorenzo", "Peter", "Miranda"));
         this.name = names.get(new Random().nextInt(names.size()));
         this.auctionSrv = auctionSrv;
+//        int noOfWorkers = Integer.valueOf(br.readLine());
+//        for (int i = 0; i < noOfWorkers; i++) {
+//            new Thread(new AuctionClientWorker(auctionSrv)).start();
+//        }
     }
 
     @Override

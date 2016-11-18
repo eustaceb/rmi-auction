@@ -5,11 +5,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import server.IAuctionServer;
-
+// REPORT: Have an additional layer for request serving with a queue for tracking load (no of requests that haven't be served yet)
+// REPORT: Naive ProbeTask implementation - could be made better by overloading RMISocketFactory()
+// REPORT: Retries infinitely, could set max retries.
 public class FailureDetector {
     private final static long DEFAULT_TIMEOUT = 5000, DEFAULT_PERIOD = 5000;
+    private final static int DEFAULT_NO_OF_PROBES = 10000;
     
-    private Timer timer; 
+    private Timer timer = new Timer(); 
     private IAuctionServer server;
     private long timeout, period;
     
@@ -33,6 +36,15 @@ public class FailureDetector {
     }
     
     /**
+     * Create a failure detector that will send probes every <period> milliseconds
+     * @param server
+     * @param period how often to probe the server in milliseconds
+     */
+    public FailureDetector(IAuctionServer server, long period) {
+        this(server, DEFAULT_TIMEOUT, period);
+    }
+    
+    /**
      * Create a failure detector with a specific timeout and period
      * @param server
      * @param timeout in milliseconds
@@ -42,6 +54,7 @@ public class FailureDetector {
         this.server = server;
         this.timeout = timeout;
         this.period = period;
+        this.timer.schedule(new ProbeTask(), 1, period);
     }
     
     /**
@@ -54,7 +67,7 @@ public class FailureDetector {
     public FailureDetector(IAuctionServer server, int noOfProbes, long sensitivity, long period) {
         this.server = server;
         try {
-            this.setTimeout(determineTimeout(noOfProbes, sensitivity));
+            this.timeout = determineTimeout(noOfProbes, sensitivity);
         } catch (RemoteException e) {
             System.err.println("Unable to contact the server in order to determine timeout. Setting default");
             this.timeout = DEFAULT_TIMEOUT;
@@ -70,17 +83,34 @@ public class FailureDetector {
      * @throws RemoteException
      */
     private long determineTimeout(int noOfProbes, long sensitivity) throws RemoteException {
-        // Prime system
+        return (long)determineLoad(noOfProbes) + sensitivity;
+    }
+
+    /**
+     * Calculates average turnaround with the default number of probes
+     * @return average turnaround, in milliseconds
+     * @throws RemoteException
+     */
+    public float determineLoad() throws RemoteException {
+        return determineLoad(DEFAULT_NO_OF_PROBES);
+    }
+    
+    /**
+     * Calculates average turnaround
+     * @param noOfProbes how many probes to use
+     * @return average turnaround, in milliseconds
+     * @throws RemoteException
+     */
+    public float determineLoad(int noOfProbes) throws RemoteException {
         server.probe();
         long start = System.currentTimeMillis();
         for (int i = 0; i < noOfProbes; i++) {
             server.probe();
         }
-        long averageTurnaround = (System.currentTimeMillis() - start) / noOfProbes;
-        
-        return averageTurnaround + sensitivity;
+        float averageTurnaround = Float.valueOf((System.currentTimeMillis() - start)) / noOfProbes;
+        return averageTurnaround;
     }
-
+    
     public long getTimeout() {
         return timeout;
     }

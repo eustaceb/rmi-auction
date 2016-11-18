@@ -27,7 +27,8 @@ public class ClientServlet {
 
         try {
             IAuctionServer auctionSrv = (IAuctionServer) Naming.lookup("rmi://"+host+":"+port+"/auction");
-
+            FailureDetector failureDetector = new FailureDetector(auctionSrv, 5000); // probe every 5s
+            
             System.out.print("What is your username? ");
             AuctionClient client = new AuctionClient(br.readLine());
             System.out.println("Choose an option");
@@ -35,7 +36,7 @@ public class ClientServlet {
             System.out.println("n - New listing");
             System.out.println("b - Bid");
             System.out.println("h - History");
-            System.out.println("t - Test system with some AuctionClientWorkers");
+            System.out.println("t - Check server load (average turnaround in ms)");
             System.out.println("q - Quit");
 
             boolean end = false;
@@ -65,11 +66,7 @@ public class ClientServlet {
                         response = auctionSrv.getClosedAuctions();
                         break;
                     case "t":
-                        System.out.print("How many? ");
-                        int noOfWorkers = Integer.valueOf(br.readLine());
-                        for (int i = 0; i < noOfWorkers; i++) {
-                            new Thread(new AuctionClientWorker(auctionSrv)).start();
-                        }
+                        response = "Average turnaround - " + failureDetector.determineLoad() + "ms";
                         break;
                     case "q":
                         end = true;

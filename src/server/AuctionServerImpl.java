@@ -7,7 +7,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 // REPORT: All error checking is done in the server
-// TODO: Logger instead of System out/err
+// TODO: Comments
 public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionServer {
     static final long serialVersionUID = 1L;
     
@@ -119,5 +119,5 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         return result.toString();
     }
     @Override
-    public void probe() throws RemoteException {}
+    public void probe() throws RemoteException { }
 }
