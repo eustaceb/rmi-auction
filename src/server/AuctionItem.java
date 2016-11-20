@@ -175,7 +175,7 @@ public class AuctionItem implements Serializable {
             if (!hasEnded) {
                 result.append("Time left: ").append(timeLeftStr);
             }
-            return result.toString();
+            return result.append("\n").toString();
         }
     }
 

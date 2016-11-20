@@ -3,6 +3,7 @@ package server;
 import client.AuctionClient;
 import client.IAuctionClient;
 
+import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
@@ -10,9 +11,11 @@ import java.util.*;
 // TODO: Comments
 public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionServer {
     static final long serialVersionUID = 1L;
-    
+
     private final long CLOSED_ITEM_CLEANUP_PERIOD = 60 * (60 * 1000); // 60min
-    private class LifecycleAuctionItemTask extends TimerTask {
+    private class LifecycleAuctionItemTask extends TimerTask implements Serializable {
+        static final long serialVersionUID = 1L;
+
         private int id;
         public LifecycleAuctionItemTask(int id) {
             this.id = id;
@@ -37,7 +40,8 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         }
     }
 
-    private Timer timer;
+    // TODO: Shouldn't be transient
+    private transient Timer timer;
     private Map<Integer, AuctionItem> auctionItems, closedAuctionItems;
 
     public AuctionServerImpl() throws RemoteException {
@@ -105,6 +109,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         StringBuilder result = new StringBuilder();
         for (AuctionItem item : auctionItems.values()) {
             result.append(item.toString());
+            result.append("-----------------------\n");
         }
         return result.toString();
     }
@@ -115,6 +120,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         StringBuilder result = new StringBuilder();
         for (AuctionItem item : closedAuctionItems.values()) {
             result.append(item.toString());
+            result.append("-----------------------\n");
         }
         return result.toString();
     }

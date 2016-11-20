@@ -47,20 +47,29 @@ public class ClientServlet {
                         response = auctionSrv.getOpenAuctions();
                         break;
                     case "n":
-                        System.out.print("Item name: ");
-                        String name = br.readLine();
-                        System.out.print("Starting price: ");
-                        float startPrice = Float.valueOf(br.readLine());
-                        System.out.print("End auction in x seconds: ");
-                        long endTime = Long.valueOf(br.readLine());
-                        response = auctionSrv.createAuctionItem(client, name, startPrice, endTime);
+                        try {
+                            System.out.print("Item name: ");
+                            String name = br.readLine();
+                            if (name.equals("")) throw new NumberFormatException();
+                            System.out.print("Starting price: ");
+                            float startPrice = Float.valueOf(br.readLine());
+                            System.out.print("End auction in x seconds: ");
+                            long endTime = Long.valueOf(br.readLine());
+                            response = auctionSrv.createAuctionItem(client, name, startPrice, endTime);
+                        } catch (NumberFormatException nfe) {
+                            System.err.println("Incorrect input format. Please try again.");
+                        }
                         break;
                     case "b":
-                        System.out.print("Acution item ID: ");
-                        int auctionItemId = Integer.valueOf(br.readLine());
-                        System.out.print("Amount: ");
-                        float bidAmount = Float.valueOf(br.readLine());
-                        response = auctionSrv.bid(client, auctionItemId, bidAmount);
+                        try {
+                            System.out.print("Acution item ID: ");
+                            int auctionItemId = Integer.valueOf(br.readLine());
+                            System.out.print("Amount: ");
+                            float bidAmount = Float.valueOf(br.readLine());
+                            response = auctionSrv.bid(client, auctionItemId, bidAmount);
+                        } catch (NumberFormatException nfe) {
+                            System.err.println("Incorrect input format. Please try again.");
+                        }
                         break;
                     case "h":
                         response = auctionSrv.getClosedAuctions();

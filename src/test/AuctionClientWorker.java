@@ -1,5 +1,6 @@
-package client;
+package test;
 
+import client.IAuctionClient;
 import server.IAuctionServer;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
