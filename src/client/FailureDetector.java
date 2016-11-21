@@ -1,5 +1,8 @@
 package client;
 
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -12,17 +15,39 @@ public class FailureDetector {
     private final static long DEFAULT_TIMEOUT = 5000, DEFAULT_PERIOD = 5000;
     private final static int DEFAULT_NO_OF_PROBES = 10000;
     
+    private String connectionStr;
     private Timer timer = new Timer(); 
     private IAuctionServer server;
     private long timeout, period;
+    private boolean connected = false;
     
+    public synchronized boolean isConnected() {
+        return connected;
+    }
+
+    public synchronized void setConnected(boolean connected) {
+        this.connected = connected;
+    }
+
+
     private class ProbeTask extends TimerTask {
         @Override
         public void run() {
             try {
+                if (!isConnected()) {
+                    server = (IAuctionServer) Naming.lookup(connectionStr);
+                    ClientServlet.auctionSrv = (IAuctionServer) Naming.lookup(connectionStr);
+                    setConnected(true);
+                    System.out.println("Reconnected!");
+                }
                 server.probe();
             } catch (RemoteException e) {
                 System.err.println("Cannot contact the server. Retrying in " + period + "ms");
+                setConnected(false);
+            } catch (MalformedURLException e) {
+                System.err.println("Malformed URL - " + e);
+            } catch (NotBoundException e) {
+                System.err.println("Unable to bind the server - " + e);
             }
         }
     }
@@ -31,8 +56,8 @@ public class FailureDetector {
      * Init failure detectore with DEFAULT_TIMEOUT and DEFAULT_PERIOD
      * @param server
      */
-    public FailureDetector(IAuctionServer server) {
-        this(server, DEFAULT_TIMEOUT, DEFAULT_PERIOD);
+    public FailureDetector(IAuctionServer server, String connectionStr) {
+        this(server, connectionStr, DEFAULT_TIMEOUT, DEFAULT_PERIOD);
     }
     
     /**
@@ -40,8 +65,8 @@ public class FailureDetector {
      * @param server
      * @param period how often to probe the server in milliseconds
      */
-    public FailureDetector(IAuctionServer server, long period) {
-        this(server, DEFAULT_TIMEOUT, period);
+    public FailureDetector(IAuctionServer server, String connectionStr, long period) {
+        this(server, connectionStr, DEFAULT_TIMEOUT, period);
     }
     
     /**
@@ -50,10 +75,12 @@ public class FailureDetector {
      * @param timeout in milliseconds
      * @param period how often to probe the server in milliseconds
      */
-    public FailureDetector(IAuctionServer server, long timeout, long period) {
+    public FailureDetector(IAuctionServer server, String connectionStr, long timeout, long period) {
         this.server = server;
+        this.connectionStr = connectionStr;
         this.timeout = timeout;
         this.period = period;
+        this.connected = true;
         this.timer.schedule(new ProbeTask(), 1, period);
     }
     
@@ -64,14 +91,16 @@ public class FailureDetector {
      * @param sensitivity how much a call can deviate from the average
      * @param period how often to probe the server in milliseconds
      */
-    public FailureDetector(IAuctionServer server, int noOfProbes, long sensitivity, long period) {
+    public FailureDetector(IAuctionServer server, String connectionStr, int noOfProbes, long sensitivity, long period) {
         this.server = server;
+        this.connectionStr = connectionStr;
         try {
             this.timeout = determineTimeout(noOfProbes, sensitivity);
         } catch (RemoteException e) {
             System.err.println("Unable to contact the server in order to determine timeout. Setting default");
             this.timeout = DEFAULT_TIMEOUT;
         }
+        this.connected = true;
         timer.schedule(new ProbeTask(), 0, period);
     }
     

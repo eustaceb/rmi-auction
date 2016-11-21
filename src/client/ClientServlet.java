@@ -12,6 +12,8 @@ import java.rmi.NotBoundException;
  * Created by justas on 14/11/16.
  */
 public class ClientServlet {
+    //TODO: Replace with (maybe) a layer of abstraction
+    public static IAuctionServer auctionSrv;
     public static void main(String[] args) {
         String host = "localhost";
         int port = 1099;
@@ -26,8 +28,9 @@ public class ClientServlet {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         try {
-            IAuctionServer auctionSrv = (IAuctionServer) Naming.lookup("rmi://"+host+":"+port+"/auction");
-            FailureDetector failureDetector = new FailureDetector(auctionSrv, 5000); // probe every 5s
+            String connectionStr = "rmi://"+host+":"+port+"/auction";
+            auctionSrv = (IAuctionServer) Naming.lookup(connectionStr);
+            FailureDetector failureDetector = new FailureDetector(auctionSrv, connectionStr, 5000); // probe every 5s
             
             System.out.print("What is your username? ");
             AuctionClient client = new AuctionClient(br.readLine());
@@ -41,49 +44,51 @@ public class ClientServlet {
 
             boolean end = false;
             while (!end) {
-                String response = "";
-                switch (br.readLine().toLowerCase()) {
-                    case "l":
-                        response = auctionSrv.getOpenAuctions();
-                        break;
-                    case "n":
-                        try {
-                            System.out.print("Item name: ");
-                            String name = br.readLine();
-                            if (name.equals("")) throw new NumberFormatException();
-                            System.out.print("Starting price: ");
-                            float startPrice = Float.valueOf(br.readLine());
-                            System.out.print("End auction in x seconds: ");
-                            long endTime = Long.valueOf(br.readLine());
-                            response = auctionSrv.createAuctionItem(client, name, startPrice, endTime);
-                        } catch (NumberFormatException nfe) {
-                            System.err.println("Incorrect input format. Please try again.");
-                        }
-                        break;
-                    case "b":
-                        try {
-                            System.out.print("Auction item ID: ");
-                            int auctionItemId = Integer.valueOf(br.readLine());
-                            System.out.print("Amount: ");
-                            float bidAmount = Float.valueOf(br.readLine());
-                            response = auctionSrv.bid(client, auctionItemId, bidAmount);
-                        } catch (NumberFormatException nfe) {
-                            System.err.println("Incorrect input format. Please try again.");
-                        }
-                        break;
-                    case "h":
-                        response = auctionSrv.getClosedAuctions();
-                        break;
-                    case "t":
-                        response = "Average turnaround - " + failureDetector.determineLoad() + "ms";
-                        break;
-                    case "q":
-                        end = true;
-                        break;
-                    default:
-                        break;
+                if (failureDetector.isConnected()) {
+                    String response = "";
+                    switch (br.readLine().toLowerCase()) {
+                        case "l":
+                            response = auctionSrv.getOpenAuctions();
+                            break;
+                        case "n":
+                            try {
+                                System.out.print("Item name: ");
+                                String name = br.readLine();
+                                if (name.equals("")) throw new NumberFormatException();
+                                System.out.print("Starting price: ");
+                                float startPrice = Float.valueOf(br.readLine());
+                                System.out.print("End auction in x seconds: ");
+                                long endTime = Long.valueOf(br.readLine());
+                                response = auctionSrv.createAuctionItem(client, name, startPrice, endTime);
+                            } catch (NumberFormatException nfe) {
+                                System.err.println("Incorrect input format. Please try again.");
+                            }
+                            break;
+                        case "b":
+                            try {
+                                System.out.print("Auction item ID: ");
+                                int auctionItemId = Integer.valueOf(br.readLine());
+                                System.out.print("Amount: ");
+                                float bidAmount = Float.valueOf(br.readLine());
+                                response = auctionSrv.bid(client, auctionItemId, bidAmount);
+                            } catch (NumberFormatException nfe) {
+                                System.err.println("Incorrect input format. Please try again.");
+                            }
+                            break;
+                        case "h":
+                            response = auctionSrv.getClosedAuctions();
+                            break;
+                        case "t":
+                            response = "Average turnaround - " + failureDetector.determineLoad() + "ms";
+                            break;
+                        case "q":
+                            end = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    System.out.println(response);
                 }
-                System.out.println(response);
             }
         } catch (IOException e) {
             System.err.println("Unable to parse your input " + e);
