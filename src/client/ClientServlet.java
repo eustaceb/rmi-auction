@@ -62,7 +62,7 @@ public class ClientServlet {
                         break;
                     case "b":
                         try {
-                            System.out.print("Acution item ID: ");
+                            System.out.print("Auction item ID: ");
                             int auctionItemId = Integer.valueOf(br.readLine());
                             System.out.print("Amount: ");
                             float bidAmount = Float.valueOf(br.readLine());

@@ -110,6 +110,9 @@ public class AuctionServlet {
         } catch (ClassNotFoundException e) {
             System.err.println("Could not find class - " + e);
         }
+        if (o instanceof AuctionServerImpl) {
+            ((AuctionServerImpl)o).reloadTimer();
+        }
         return (IAuctionServer)o;
     }
 
@@ -117,6 +120,9 @@ public class AuctionServlet {
         try {
             FileOutputStream out = new FileOutputStream(fileName);
             ObjectOutputStream oos = new ObjectOutputStream(out);
+            if (auction instanceof AuctionServerImpl) {
+                ((AuctionServerImpl)auction).stopTimer();
+            }
             oos.writeObject(auction);
             oos.close();
             System.out.println("Successfully saved server state to " + fileName);
