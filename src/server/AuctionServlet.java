@@ -120,9 +120,6 @@ public class AuctionServlet {
         try {
             FileOutputStream out = new FileOutputStream(fileName);
             ObjectOutputStream oos = new ObjectOutputStream(out);
-            if (auction instanceof AuctionServerImpl) {
-                ((AuctionServerImpl)auction).stopTimer();
-            }
             oos.writeObject(auction);
             oos.close();
             System.out.println("Successfully saved server state to " + fileName);

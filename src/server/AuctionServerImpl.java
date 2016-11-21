@@ -1,6 +1,5 @@
 package server;
 
-import client.AuctionClient;
 import client.IAuctionClient;
 import javafx.util.Pair;
 
@@ -13,11 +12,10 @@ import java.util.*;
 public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionServer {
     static final long serialVersionUID = 1L;
 
-    private final long CLOSED_ITEM_CLEANUP_PERIOD = 60 * (60 * 1000); // 60min
-    private long stopped;
-
     private class LifecycleAuctionItemTask extends TimerTask implements Serializable {
         static final long serialVersionUID = 1L;
+
+        private final long CLOSED_ITEM_CLEANUP_PERIOD = 60 * (60 * 1000); // 60min
 
         private int id;
         private long started;
@@ -28,19 +26,21 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         }
 
         public long getElapsed() {
-            return stopped - this.started;
+            return System.currentTimeMillis() - started;
         }
         @Override
         public void run() {
-            // If the auction is open - close and create a new task for removing it from closed. Notify observers.
+            // If the auction is open - close and create a new task for removing it from closed.
+            // If the auction is already closed - remove it.
             AuctionItem expiredAuction;
             if ((expiredAuction = auctionItems.remove(id)) != null) {
+                // Move auction to closed
                 closedAuctionItems.put(id, expiredAuction);
-
+                // Schedule cleanup task
                 LifecycleAuctionItemTask t = new LifecycleAuctionItemTask(id);
                 timer.schedule(t, CLOSED_ITEM_CLEANUP_PERIOD);
-                timerTasks.add(new Pair<>(t, CLOSED_ITEM_CLEANUP_PERIOD));
-
+                timerTasks.put(t, CLOSED_ITEM_CLEANUP_PERIOD);
+                // Notify observers
                 StringBuilder m = new StringBuilder("Auction for item " + expiredAuction.getName() + " has ended. ");
                 m.append("Winning bid - ").append(expiredAuction.getCurrentBid().getAmount());
                 m.append(" by ").append(expiredAuction.getCurrentBid().getOwnerName());
@@ -51,11 +51,13 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
                 closedAuctionItems.remove(id);
                 System.out.println("Removed auction ID #" + id);
             }
+            // Remove this task from map
+            timerTasks.remove(this);
         }
     }
 
     private transient Timer timer;
-    private List<Pair<LifecycleAuctionItemTask, Long>> timerTasks;
+    private Map<LifecycleAuctionItemTask, Long> timerTasks;
     private Map<Integer, AuctionItem> auctionItems, closedAuctionItems;
 
     public AuctionServerImpl() throws RemoteException {
@@ -63,24 +65,18 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         auctionItems = new HashMap<>();
         closedAuctionItems = new HashMap<>();
         timer = new Timer();
-        timerTasks = new LinkedList<>();
+        timerTasks = new HashMap<>();
     }
 
     /**
      * Reloads timer when loading auction from file
      */
-    public void stopTimer() {
-        stopped = System.currentTimeMillis();
-    }
-    /**
-     * Reloads timer when loading auction from file
-     */
     public void reloadTimer() {
         timer = new Timer();
-        for (Pair<LifecycleAuctionItemTask, Long> t: timerTasks) {
-            // TODO: Bug - auction end condition different
+        for (Map.Entry<LifecycleAuctionItemTask, Long> t: timerTasks.entrySet()) {
             // Reschedule task to initial value subtracted how much has already elapsed
-            timer.schedule(t.getKey(), t.getValue() - t.getKey().getElapsed());
+            long timeLeft = t.getValue() - t.getKey().getElapsed();
+            timer.schedule(t.getKey(), timeLeft < 0 ? 0 : timeLeft);
         }
     }
 
@@ -95,10 +91,10 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         // Further validation in AuctionItem's constructor
         AuctionItem item = new AuctionItem(owner, name, minVal, closingTime);
         auctionItems.put(item.getId(), item);
-        // Timer task
+        // Timer for ending the auction
         LifecycleAuctionItemTask t = new LifecycleAuctionItemTask(item.getId());
         timer.schedule(t, closingTime * 1000);
-        timerTasks.add(new Pair<>(t, closingTime * 1000));
+        timerTasks.put(t, closingTime * 1000);
 
         System.out.println("Auction ID #" + item.getId() + " - " + item.getName() + " created");
         return ErrorCodes.ITEM_CREATED.MESSAGE;
