@@ -5,15 +5,19 @@ import server.IAuctionServer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 
 /**
  * Created by justas on 14/11/16.
  */
 public class ClientServlet {
     //TODO: Replace with (maybe) a layer of abstraction
-    public static IAuctionServer auctionSrv;
+    private IAuctionServer auctionSrv;
+    private String connectionStr;
+
     public static void main(String[] args) {
         String host = "localhost";
         int port = 1099;
@@ -25,12 +29,11 @@ public class ClientServlet {
             port = Integer.parseInt(args[1]);
         }
 
+        String connectionStr = "rmi://"+host+":"+port+"/auction";
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         try {
-            String connectionStr = "rmi://"+host+":"+port+"/auction";
-            auctionSrv = (IAuctionServer) Naming.lookup(connectionStr);
-            FailureDetector failureDetector = new FailureDetector(auctionSrv, connectionStr, 5000); // probe every 5s
+            ConnectionLayer connection = new ConnectionLayer(connectionStr);
             
             System.out.print("What is your username? ");
             AuctionClient client = new AuctionClient(br.readLine());
@@ -44,11 +47,11 @@ public class ClientServlet {
 
             boolean end = false;
             while (!end) {
-                if (failureDetector.isConnected()) {
-                    String response = "";
+                String response = "";
+                try {
                     switch (br.readLine().toLowerCase()) {
                         case "l":
-                            response = auctionSrv.getOpenAuctions();
+                            response = connection.getServer().getOpenAuctions();
                             break;
                         case "n":
                             try {
@@ -59,7 +62,7 @@ public class ClientServlet {
                                 float startPrice = Float.valueOf(br.readLine());
                                 System.out.print("End auction in x seconds: ");
                                 long endTime = Long.valueOf(br.readLine());
-                                response = auctionSrv.createAuctionItem(client, name, startPrice, endTime);
+                                response = connection.getServer().createAuctionItem(client, name, startPrice, endTime);
                             } catch (NumberFormatException nfe) {
                                 System.err.println("Incorrect input format. Please try again.");
                             }
@@ -70,16 +73,16 @@ public class ClientServlet {
                                 int auctionItemId = Integer.valueOf(br.readLine());
                                 System.out.print("Amount: ");
                                 float bidAmount = Float.valueOf(br.readLine());
-                                response = auctionSrv.bid(client, auctionItemId, bidAmount);
+                                response = connection.getServer().bid(client, auctionItemId, bidAmount);
                             } catch (NumberFormatException nfe) {
                                 System.err.println("Incorrect input format. Please try again.");
                             }
                             break;
                         case "h":
-                            response = auctionSrv.getClosedAuctions();
+                            response = connection.getServer().getClosedAuctions();
                             break;
                         case "t":
-                            response = "Average turnaround - " + failureDetector.determineLoad() + "ms";
+                            response = "Average turnaround - " + connection.getFailureDetector().determineLoad() + "ms";
                             break;
                         case "q":
                             end = true;
@@ -87,15 +90,14 @@ public class ClientServlet {
                         default:
                             break;
                     }
-                    System.out.println(response);
+                } catch (RemoteException e) {
+                    System.out.println(e);
                 }
+                System.out.println(response);
             }
         } catch (IOException e) {
             System.err.println("Unable to parse your input " + e);
             System.exit(2);
-        } catch (NotBoundException e) {
-            System.err.println("Unable to access the server object " + e);
-            System.exit(3);
         }
     }
 }
