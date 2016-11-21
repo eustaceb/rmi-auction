@@ -122,10 +122,12 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
     public String getOpenAuctions() throws RemoteException {
         if (auctionItems.size() == 0) return "No available auctions";
         StringBuilder result = new StringBuilder();
+        String separator = "-----------------------\n";
         for (AuctionItem item : auctionItems.values()) {
             result.append(item.toString());
-            result.append("-----------------------\n");
+            result.append(separator);
         }
+        result.delete(result.length() - separator.length(), result.length());
         return result.toString();
     }
 
@@ -133,10 +135,12 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
     public String getClosedAuctions() throws RemoteException {
         if (closedAuctionItems.size() == 0) return "No historical auctions";
         StringBuilder result = new StringBuilder();
+        String separator = "-----------------------\n";
         for (AuctionItem item : closedAuctionItems.values()) {
             result.append(item.toString());
-            result.append("-----------------------\n");
+            result.append(separator);
         }
+        result.delete(result.length() - separator.length(), result.length());
         return result.toString();
     }
     @Override
