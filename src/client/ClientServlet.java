@@ -84,6 +84,7 @@ public class ClientServlet {
                 }
                 System.out.println(response);
             }
+            System.exit(0);
         } catch (IOException e) {
             System.err.println("Unable to parse your input " + e);
             System.exit(2);

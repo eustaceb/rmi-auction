@@ -4,12 +4,13 @@ import client.ConnectionLayer;
 import client.IAuctionClient;
 import server.IAuctionServer;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.Set;
 
-public class AuctionClientWorker implements Runnable, IAuctionClient {
+public class AuctionClientWorker extends UnicastRemoteObject implements Runnable, IAuctionClient {
+    private static final long serialVersionUID = 1L;
 
     private static ArrayList<String> itemNames = new ArrayList<>(Arrays.asList("Shoes made from potatoes",
             "Crocodile tears", "Burbonic plague", "Illegal substance", "Fake passport", "Dog hair",
@@ -18,32 +19,37 @@ public class AuctionClientWorker implements Runnable, IAuctionClient {
     private ConnectionLayer connection;
     private String name;
     private long end;
+    private int items;
 
-    public AuctionClientWorker(ConnectionLayer connection, String name, long runtime) {
+    public AuctionClientWorker(ConnectionLayer connection, String name, long runtime, int items) throws RemoteException {
+        super();
         this.connection = connection;
         this.name = name;
         this.end = System.currentTimeMillis() + runtime;
+        this.items = items;
     }
 
     @Override
     public void run() {
         //System.out.println(this.name + " is running");
         Random rg = new Random();
-        int timer = rg.nextInt(5000);
+        int counter = 0;
         while (System.currentTimeMillis() < end) {
             try {
                 IAuctionServer srv = connection.getServer();
                 int rndInt = rg.nextInt(itemNames.size());
                 float rndFloat = rg.nextFloat() * 100;
-
-                Set<Integer> openAuctionIds = srv.getOpenAuctionIds();
-                if (openAuctionIds.size() < 40) {
-                    srv.createAuctionItem(this, itemNames.get(rndInt) + name, rndFloat, rndInt * 60);
+                ArrayList<Integer> openAuctionIds = srv.getOpenAuctionIds();
+                if (openAuctionIds.size() < items) {
+                    String itemName = itemNames.get(rndInt) + " - thread " + name;
+                    System.out.println("Creating " + itemName + " minBid " + rndFloat + " ends " + rndInt * 60 + 60);
+                    srv.createAuctionItem(this, itemName, rndFloat, 60 + rndInt * 60);
                 } else {
                     int rndId = rg.nextInt(openAuctionIds.size());
-                    srv.bid(this, rndId, rndFloat * 2);
+                    srv.bid(this, rndId, counter + rndFloat * 2);
+                    counter += 10;
                 }
-                Thread.sleep(100);
+                Thread.sleep(50);
             } catch (RemoteException e) {
                 System.err.println("Could not contact the server " + e);
                 System.exit(1);

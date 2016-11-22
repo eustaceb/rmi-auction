@@ -178,7 +178,7 @@ public class AuctionItem implements Serializable {
             StringBuilder result = new StringBuilder("Auction Item #");
             result.append(id).append(": ").append(name).append("\n");
             result.append("Minimum bid: ").append(minBid).append("\n");
-            if (hasEnded) {
+            if (hasEnded && getCurrentBid() != null) {
                 result.append("Winning bid: ").append(currentBid)
                         .append(" by ").append(currentBid.getOwnerName()).append("\n");
             } else {

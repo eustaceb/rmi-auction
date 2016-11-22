@@ -3,13 +3,18 @@ package server;
 import client.IAuctionClient;
 
 import java.io.*;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 // REPORT: All error checking is done in the server
 public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionServer {
     static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = Logger.getLogger(AuctionServerImpl.class.getName());
+
 
     private class LifecycleAuctionItemTask extends TimerTask implements Serializable {
         static final long serialVersionUID = 1L;
@@ -36,26 +41,32 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
             // If the auction is open - close and create a new task for removing it from closed.
             // If the auction is already closed - remove it.
             AuctionItem expiredAuction;
-            if ((expiredAuction = auctionItems.remove(id)) != null) {
-                // Move auction to closed
-                closedAuctionItems.put(id, expiredAuction);
-                // Schedule cleanup task
-                LifecycleAuctionItemTask t = new LifecycleAuctionItemTask(id);
-                timer.schedule(t, CLOSED_ITEM_CLEANUP_PERIOD);
-                timerTasks.put(t, CLOSED_ITEM_CLEANUP_PERIOD);
-                // Notify observers
-                StringBuilder m = new StringBuilder("Auction for item " + expiredAuction.getName() + " has ended. ");
-                m.append("Winning bid - ").append(expiredAuction.getCurrentBid().getAmount());
-                m.append(" by ").append(expiredAuction.getCurrentBid().getOwnerName());
-                expiredAuction.notifyObservers(m.toString());
-                System.out.println(m);
-            } else {
-                // Remove the closed auction permanently after cleanup period
-                closedAuctionItems.remove(id);
-                System.out.println("Removed auction ID #" + id);
+            synchronized(this) {
+                if ((expiredAuction = auctionItems.remove(id)) != null) {
+                    // Move auction to closed
+                    closedAuctionItems.put(id, expiredAuction);
+                    // Schedule cleanup task
+                    LifecycleAuctionItemTask t = new LifecycleAuctionItemTask(id);
+                    timer.schedule(t, CLOSED_ITEM_CLEANUP_PERIOD);
+                    timerTasks.put(t, CLOSED_ITEM_CLEANUP_PERIOD);
+                    // Notify observers
+                    StringBuilder m = new StringBuilder("Auction for item " + expiredAuction.getName() + " has ended. ");
+                    if (expiredAuction.getCurrentBid() != null) {
+                        m.append("Winning bid - ").append(expiredAuction.getCurrentBid().getAmount());
+                        m.append(" by ").append(expiredAuction.getCurrentBid().getOwnerName());
+                    } else {
+                        m.append("No winner!");
+                    }
+                    expiredAuction.notifyObservers(m.toString());
+                    LOGGER.info(m.toString());
+                } else {
+                    // Remove the closed auction permanently after cleanup period
+                    closedAuctionItems.remove(id);
+                    LOGGER.info("Removed auction ID #" + id);
+                }
+                // Remove this task from map
+                timerTasks.remove(this);
             }
-            // Remove this task from map
-            timerTasks.remove(this);
         }
     }
 
@@ -65,10 +76,11 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
 
     public AuctionServerImpl() throws RemoteException {
         super();
-        auctionItems = new HashMap<>();
+        auctionItems = new ConcurrentHashMap<>();
         closedAuctionItems = new HashMap<>();
         timer = new Timer();
         timerTasks = new HashMap<>();
+        LOGGER.setLevel(Level.ALL);
     }
 
     /**
@@ -86,7 +98,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
     @Override
     public String createAuctionItem(IAuctionClient owner, String name, float minVal, long closingTime) throws RemoteException {
         if (owner == null) return ErrorCodes.OWNER_NULL.MESSAGE;
-        System.out.println("Client " + owner.getName() + " is trying to create an auction item");
+        LOGGER.info("Client " + owner.getName() + " is trying to create an auction item");
         if (name == null) return ErrorCodes.NAME_NULL.MESSAGE;
         if (name.length() == 0) return ErrorCodes.NAME_EMPTY.MESSAGE;
         if (minVal < 0) return ErrorCodes.NEGATIVE_MINVAL.MESSAGE;
@@ -99,7 +111,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         timer.schedule(t, closingTime * 1000);
         timerTasks.put(t, closingTime * 1000);
 
-        System.out.println("Auction ID #" + item.getId() + " - " + item.getName() + " created");
+        LOGGER.info("Auction ID #" + item.getId() + " - " + item.getName() + " created");
         return ErrorCodes.ITEM_CREATED.MESSAGE;
     }
 
@@ -108,7 +120,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         if (owner == null) return ErrorCodes.OWNER_NULL.MESSAGE;
         // Get owner name so we don't have to query multiple times and risk a RemoteException
         String ownerName = owner.getName();
-        System.out.println("Client " + ownerName + " is trying to bid on item ID #" + auctionItemId);
+        LOGGER.info("Client " + ownerName + " is trying to bid on item ID #" + auctionItemId);
         // Validate item exists and doesn't belong to the bidder
         AuctionItem item = auctionItems.get(auctionItemId);
         if (item == null) return ErrorCodes.AUCTION_DOES_NOT_EXIST.MESSAGE;
@@ -117,7 +129,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         Bid b = new Bid(owner, ownerName, amount);
         String result = item.makeBid(b);
 
-        System.out.println(result + " - " + owner.getName() + ", item ID #" + auctionItemId);
+        LOGGER.info(result + " - " + owner.getName() + ", item ID #" + auctionItemId);
         return result;
     }
 
@@ -134,8 +146,8 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         return result.toString();
     }
 
-    public Set<Integer> getOpenAuctionIds() throws RemoteException {
-        return auctionItems.keySet();
+    public ArrayList<Integer> getOpenAuctionIds() throws RemoteException {
+        return new ArrayList<Integer>(auctionItems.keySet());
     }
 
     @Override

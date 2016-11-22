@@ -4,7 +4,7 @@ import client.IAuctionClient;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Set;
+import java.util.ArrayList;
 
 public interface IAuctionServer extends Remote {
     /**
@@ -41,7 +41,7 @@ public interface IAuctionServer extends Remote {
      * @return set of auction item ids
      * @throws RemoteException
      */
-    Set<Integer> getOpenAuctionIds() throws RemoteException;
+    ArrayList<Integer> getOpenAuctionIds() throws RemoteException;
     /**
      * Returns a nicely formatted string that contains a list of closed auctions
      * @return list of closed auctions
