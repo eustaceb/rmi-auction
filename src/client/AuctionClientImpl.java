@@ -3,18 +3,15 @@ package client;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-/**
- * Created by justas on 03/11/16.
- */
-public class AuctionClient extends UnicastRemoteObject implements IAuctionClient {
+public class AuctionClientImpl extends UnicastRemoteObject implements IAuctionClient {
     private static final long serialVersionUID = 1L;
     private String name;
 
-    public AuctionClient() throws RemoteException {
+    public AuctionClientImpl() throws RemoteException {
         super();
         this.name = "Name not set";
     }
-    public AuctionClient(String name) throws RemoteException {
+    public AuctionClientImpl(String name) throws RemoteException {
         super();
         this.name = name;
     }

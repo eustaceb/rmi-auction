@@ -5,9 +5,6 @@ import client.IAuctionClient;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 
-/**
- * Created by justas on 04/11/16.
- */
 public class Bid implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -40,8 +37,8 @@ public class Bid implements Serializable {
     @Override
     public String toString() {
         SimpleDateFormat dF = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-        StringBuilder sb = new StringBuilder("Amount - ");
-        sb.append(amount).append(" @ ").append(dF.format(timestamp));
+        StringBuilder sb = new StringBuilder();
+        sb.append(amount).append("£").append(" @ ").append(dF.format(timestamp));
         return sb.toString();
     }
 }

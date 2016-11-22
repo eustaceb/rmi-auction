@@ -1,14 +1,13 @@
 package server;
 
 import client.IAuctionClient;
-import javafx.util.Pair;
 
 import java.io.*;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 // REPORT: All error checking is done in the server
-// TODO: Comments
 public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionServer {
     static final long serialVersionUID = 1L;
 
@@ -25,7 +24,11 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
             this.started = System.currentTimeMillis();
         }
 
-        public long getElapsed() {
+        /**
+         * How much time this task has left to run
+         * @return
+         */
+        public long getTimeLeft() {
             return System.currentTimeMillis() - started;
         }
         @Override
@@ -75,7 +78,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         timer = new Timer();
         for (Map.Entry<LifecycleAuctionItemTask, Long> t: timerTasks.entrySet()) {
             // Reschedule task to initial value subtracted how much has already elapsed
-            long timeLeft = t.getValue() - t.getKey().getElapsed();
+            long timeLeft = t.getValue() - t.getKey().getTimeLeft();
             timer.schedule(t.getKey(), timeLeft < 0 ? 0 : timeLeft);
         }
     }
@@ -131,6 +134,10 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         return result.toString();
     }
 
+    public Set<Integer> getOpenAuctionIds() throws RemoteException {
+        return auctionItems.keySet();
+    }
+
     @Override
     public String getClosedAuctions() throws RemoteException {
         if (closedAuctionItems.size() == 0) return "No historical auctions";
@@ -143,6 +150,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         result.delete(result.length() - separator.length(), result.length());
         return result.toString();
     }
+
     @Override
     public void probe() throws RemoteException { }
 }

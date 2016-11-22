@@ -6,9 +6,7 @@ import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-/**
- * Created by justas on 04/11/16.
- */
+
 public class AuctionItem implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -27,8 +25,10 @@ public class AuctionItem implements Serializable {
         this.owner = owner;
         this.startDate = new Date(System.currentTimeMillis());
         this.closingDate = new Date(System.currentTimeMillis() + 1000 * closingTime);
-        this.id = idCounter;
-        idCounter += 1;
+        synchronized(this) {
+            this.id = idCounter;
+            idCounter += 1;
+        }
         this.name = name;
         this.bids = new LinkedList<>();
         this.observers = new HashSet<>();
@@ -36,6 +36,10 @@ public class AuctionItem implements Serializable {
         this.minBid = minBid;
     }
 
+    /**
+     * Notifies all bidders and the owner with a message
+     * @param message
+     */
     public void notifyObservers(String message) {
         for (IAuctionClient client : observers) {
             try {
@@ -46,6 +50,11 @@ public class AuctionItem implements Serializable {
         }
     }
 
+    /**
+     * Thread-safe bidding
+     * @param b bid object
+     * @return
+     */
     public synchronized String makeBid(Bid b) {
         Bid currentBid = getCurrentBid();
         if (closingDate.getTime() - startDate.getTime() < 0) {
@@ -134,15 +143,20 @@ public class AuctionItem implements Serializable {
         return this.startDate.getTime();
     }
 
+    /**
+     * Bid list as a string
+     * @return
+     */
     public String getBidListStr() {
         StringBuilder result = new StringBuilder("Bids so far:\n==================\n");
-        synchronized(bids) {
+        synchronized(this) {
             for (Bid b : bids) {
                 result.append(b.toString()).append("\n");
             }
         }
         return result.toString();
     }
+
     @Override
     public String toString() {
         synchronized(this) {

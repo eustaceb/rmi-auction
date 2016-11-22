@@ -1,13 +1,9 @@
 package client;
 
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import server.IAuctionServer;
 // REPORT: Have an additional layer for request serving with a queue for tracking load (no of requests that haven't be served yet)
 // REPORT: Naive ProbeTask implementation - could be made better by overloading RMISocketFactory()
 // REPORT: Retries infinitely, could set max retries.

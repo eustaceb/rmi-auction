@@ -1,8 +1,5 @@
 package server;
 
-/**
- * Created by justas on 15/11/16.
- */
 public enum ErrorCodes {
     AUCTION_CLOSED(-1, "The auction is closed"),
     ALREADY_MAX_BIDDER(-2, "You are already the max bidder"),

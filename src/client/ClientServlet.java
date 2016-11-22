@@ -1,22 +1,11 @@
 package client;
 
-import server.IAuctionServer;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
-/**
- * Created by justas on 14/11/16.
- */
 public class ClientServlet {
-    //TODO: Replace with (maybe) a layer of abstraction
-    private IAuctionServer auctionSrv;
-    private String connectionStr;
 
     public static void main(String[] args) {
         String host = "localhost";
@@ -36,7 +25,7 @@ public class ClientServlet {
             ConnectionLayer connection = new ConnectionLayer(connectionStr);
             
             System.out.print("What is your username? ");
-            AuctionClient client = new AuctionClient(br.readLine());
+            AuctionClientImpl client = new AuctionClientImpl(br.readLine());
             System.out.println("Choose an option");
             System.out.println("l - List items");
             System.out.println("n - New listing");

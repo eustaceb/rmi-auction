@@ -1,31 +1,54 @@
 package test;
 
-import server.AuctionItem;
-import server.Bid;
+import client.ConnectionLayer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.rmi.RemoteException;
 
-/**
- * Created by justas on 04/11/16.
- */
 public class TestClasses {
+    // How often to check load
+    private static long INTERVAL = 5;
     public static void main(String args[]) {
-        /*AuctionItem auctionItem1 = new AuctionItem("Boxers", 5.0f, System.currentTimeMillis() + 55*1000);
-        AuctionItem auctionItem2 = new AuctionItem("Boxers", 5.0f, System.currentTimeMillis() + 35*22*1000);
-        AuctionItem auctionItem3 = new AuctionItem("Boxers", 5.0f, System.currentTimeMillis() + 50*44*60*1000);
-        System.out.println(auctionItem1);
-        System.out.println(auctionItem2);
-        System.out.println(auctionItem3);
+        String host = "localhost";
+        int port = 1099;
 
-        ArrayList<String> names = new ArrayList<>(Arrays.asList("John", "Alex", "Bender", "Jess", "Chris", "Alberto", "Xin", "Jack", "Spencer", "Mark", "Lorenzo", "Peter", "Miranda"));
-        for (String name : names) {
-            // TODO: Replace null
-            auctionItem1.makeBid(new Bid(null, new Random().nextFloat() * 100));
+        if (args.length == 1) {
+            port = Integer.parseInt(args[0]);
+        } else if (args.length == 2) {
+            host = args[0];
+            port = Integer.parseInt(args[1]);
         }
-        System.out.println(auctionItem1);
-        System.out.println(auctionItem1.getBidListStr());
-        //auctionItem1.makeBid()*/
+
+        ConnectionLayer connection = new ConnectionLayer("rmi://"+host+":"+port+"/auction", 1000);
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+        long noOfWorkers = 0, duration = 0;
+        try {
+            System.out.println("How many workers would you like to test against?");
+            noOfWorkers = Long.valueOf(br.readLine());
+            System.out.println("And for how long (in seconds, at least " + INTERVAL + ")?");
+            duration = Long.valueOf(br.readLine());
+            if (duration < INTERVAL) throw new IOException("Duration must be at least " + INTERVAL + "s");
+        } catch (IOException e) {
+            System.err.println("Unable to parse input " + e);
+        }
+        for (int i = 0; i < noOfWorkers; i++) {
+            AuctionClientWorker cl = new AuctionClientWorker(connection, String.valueOf(i), duration * 1000);
+            new Thread(cl).start();
+        }
+        try {
+            // Output load every 5s
+            for (int i = 0; i < duration / INTERVAL; i++) {
+                Thread.sleep(INTERVAL * 1000);
+                float load = connection.getFailureDetector().determineLoad();
+                System.out.println("Server load - " + load);
+            }
+        } catch (RemoteException e) {
+            System.err.println("Unable to determine server load - " + e);
+        } catch (InterruptedException e) {
+            System.err.println("Unable to sleep thread - " + e);
+        }
     }
 }

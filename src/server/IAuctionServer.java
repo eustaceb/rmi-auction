@@ -4,19 +4,54 @@ import client.IAuctionClient;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Set;
 
-/**
- * Created by justas on 04/11/16.
- * The client program(s) should enable a user to create auction items (specifying name, minimum item
- value and closing date/time specified in seconds; returning unique id), and to bid against existing
- auction items. Methods for listing available auction items should also be included. By the end of an
- auction, the owner as well as the bidders of the item should be notified of the result (e.g., winner id,
- winning bid, price not met, etc.).
- */
 public interface IAuctionServer extends Remote {
+    /**
+     * Create an auction item
+     * @param owner client object
+     * @param name item name
+     * @param minVal minimum bid
+     * @param closingTime closing time in seconds
+     * @return success/error message
+     * @throws RemoteException
+     */
     String createAuctionItem(IAuctionClient owner, String name, float minVal, long closingTime) throws RemoteException;
+
+    /**
+     * Make a bid
+     * @param owner client object
+     * @param auctionItemId item id
+     * @param amount bid amount
+     * @return success/error message
+     * @throws RemoteException
+     */
     String bid(IAuctionClient owner, int auctionItemId, float amount) throws RemoteException;
+
+    /**
+     * Returns a nicely formatted string that contains a list of open auctions
+     * @return list of open auctions
+     * @throws RemoteException
+     */
     String getOpenAuctions() throws RemoteException;
+
+    /**
+     * Returns a set of item IDs instead of a user-friendly string
+     * Mainly used by AuctionClientWorker
+     * @return set of auction item ids
+     * @throws RemoteException
+     */
+    Set<Integer> getOpenAuctionIds() throws RemoteException;
+    /**
+     * Returns a nicely formatted string that contains a list of closed auctions
+     * @return list of closed auctions
+     * @throws RemoteException
+     */
     String getClosedAuctions() throws RemoteException;
+
+    /**
+     * Probes the server to check if alive
+     * @throws RemoteException
+     */
     void probe() throws RemoteException;
 }

@@ -8,7 +8,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 /**
- * Created by justas on 21/11/16.
+ * TODO: Ideally, the failure detector should be optional
+ * It should be assigned using connection.setFailureDetector(new FailureDetector(param1, param2, ...))
+ * Having failure detector params in the constructor is a bad idea
  */
 public class ConnectionLayer {
     private FailureDetector failureDetector;
@@ -18,23 +20,40 @@ public class ConnectionLayer {
 
     private IAuctionServer server;
 
+    /**
+     * Basic constructor that only requires a connection string
+     * @param connectionStr
+     */
     public ConnectionLayer(String connectionStr) {
         this.connectionStr = connectionStr;
         connect();
         failureDetector = new FailureDetector(this);
     }
 
+    /**
+     * The period parameter is passed to the FailureDetector, determines how often to retry in case connection breaks
+     * @param connectionStr
+     * @param period
+     */
+    public ConnectionLayer(String connectionStr, long period) {
+        this.connectionStr = connectionStr;
+        connect();
+        failureDetector = new FailureDetector(this, period);
+    }
+
     private void connect() {
-        try {
-            server = (IAuctionServer) Naming.lookup(connectionStr);
-            // Flag used by the servlet
-            setConnected(true);
-        } catch (MalformedURLException e) {
-            System.err.println("Malformed URL - " + e);
-        } catch (NotBoundException e) {
-            System.err.println("Unable to bind the server - " + e);
-        } catch (RemoteException e) {
-            System.err.println("Unable to contact the server - " + e);
+        if (!isConnected()) {
+            try {
+                server = (IAuctionServer) Naming.lookup(connectionStr);
+                // Flag used by the servlet
+                setConnected(true);
+            } catch (MalformedURLException e) {
+                System.err.println("Malformed URL - " + e);
+            } catch (NotBoundException e) {
+                System.err.println("Unable to bind the server - " + e);
+            } catch (RemoteException e) {
+                System.err.println("Unable to contact the server - " + e);
+            }
         }
     }
 
