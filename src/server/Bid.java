@@ -15,7 +15,8 @@ public class Bid implements Serializable {
 
     public Bid(IAuctionClient owner, String ownerName, float amount) {
         this.owner = owner;
-        // REPORT: Discrepancy between owner/ownerName
+        // In case the owner disconnects - maintain record of his name
+        // Would be replaced by a proper authentication system
         this.ownerName = ownerName;
         this.amount = amount;
         this.timestamp = System.currentTimeMillis();

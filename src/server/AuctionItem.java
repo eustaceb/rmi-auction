@@ -100,16 +100,8 @@ public class AuctionItem implements Serializable {
         return owner;
     }
 
-    public void setOwner(IAuctionClient owner) {
-        this.owner = owner;
-    }
-
     public LinkedList<Bid> getBids() {
         return bids;
-    }
-
-    public void setBids(LinkedList<Bid> bids) {
-        this.bids = bids;
     }
 
     public String getName() {
@@ -126,8 +118,6 @@ public class AuctionItem implements Serializable {
 
     public Set<IAuctionClient> getObservers() { return observers; }
 
-    public void setObservers(Set<IAuctionClient> observers) { this.observers = observers; }
-
     public Date getStartDate() { return startDate; }
 
 
@@ -143,19 +133,6 @@ public class AuctionItem implements Serializable {
         return this.startDate.getTime();
     }
 
-    /**
-     * Bid list as a string
-     * @return
-     */
-    public String getBidListStr() {
-        StringBuilder result = new StringBuilder("Bids so far:\n==================\n");
-        synchronized(this) {
-            for (Bid b : bids) {
-                result.append(b.toString()).append("\n");
-            }
-        }
-        return result.toString();
-    }
 
     @Override
     public String toString() {

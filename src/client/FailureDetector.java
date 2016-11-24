@@ -4,9 +4,6 @@ import java.rmi.RemoteException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-// REPORT: Have an additional layer for request serving with a queue for tracking load (no of requests that haven't be served yet)
-// REPORT: Naive ProbeTask implementation - could be made better by overloading RMISocketFactory()
-// REPORT: Retries infinitely, could set max retries.
 public class FailureDetector {
     private final static long DEFAULT_TIMEOUT = 5000, DEFAULT_PERIOD = 5000;
     private final static int DEFAULT_NO_OF_PROBES = 10000;

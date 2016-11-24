@@ -39,10 +39,7 @@ public class AuctionServlet {
             port = Integer.parseInt(args[1]);
         }
 
-        System.setProperty("java.security.policy", "file:///home/justas/Uni/DAS/Auction/out/production/RMIAuction/server/policyf.txt");
-        //if (System.getSecurityManager() == null) {
-        //    System.setSecurityManager(new RMISecurityManager());
-        //}
+        //System.setProperty("java.security.policy", "file:///home/justas/Uni/DAS/Auction/out/production/RMIAuction/server/policyf.txt");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String fileName = "";
 

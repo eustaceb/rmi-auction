@@ -8,7 +8,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 /**
- * TODO: Ideally, the failure detector should be optional
+ * Ideally, the failure detector should be optional
  * It should be assigned using connection.setFailureDetector(new FailureDetector(param1, param2, ...))
  * Having failure detector params in the constructor is a bad idea
  */

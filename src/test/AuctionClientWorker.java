@@ -20,6 +20,7 @@ public class AuctionClientWorker extends UnicastRemoteObject implements Runnable
     private String name;
     private long end;
     private int items;
+    private final long DEFAULT_INCREMENT = 50;
 
     public AuctionClientWorker(ConnectionLayer connection, String name, long runtime, int items) throws RemoteException {
         super();
@@ -33,7 +34,7 @@ public class AuctionClientWorker extends UnicastRemoteObject implements Runnable
     public void run() {
         //System.out.println(this.name + " is running");
         Random rg = new Random();
-        int counter = 0;
+        long counter = 0;
         while (System.currentTimeMillis() < end) {
             try {
                 IAuctionServer srv = connection.getServer();
@@ -47,7 +48,7 @@ public class AuctionClientWorker extends UnicastRemoteObject implements Runnable
                 } else {
                     int rndId = rg.nextInt(openAuctionIds.size());
                     srv.bid(this, rndId, counter + rndFloat * 2);
-                    counter += 10;
+                    counter += DEFAULT_INCREMENT;
                 }
                 Thread.sleep(50);
             } catch (RemoteException e) {

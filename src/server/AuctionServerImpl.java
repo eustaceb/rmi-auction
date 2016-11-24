@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-// REPORT: All error checking is done in the server
 public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionServer {
     static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(AuctionServerImpl.class.getName());
@@ -80,7 +79,7 @@ public class AuctionServerImpl extends UnicastRemoteObject implements IAuctionSe
         closedAuctionItems = new HashMap<>();
         timer = new Timer();
         timerTasks = new HashMap<>();
-        LOGGER.setLevel(Level.ALL);
+        LOGGER.setLevel(Level.OFF);
     }
 
     /**
