@@ -26,6 +26,7 @@ public class RunSimulation {
 
         int noOfWorkers = 0;
         long duration = 0;
+        float cumulative = 0;
         try {
             System.out.println("How many workers would you like to test against?");
             noOfWorkers = Integer.valueOf(br.readLine());
@@ -42,7 +43,8 @@ public class RunSimulation {
             for (int i = 0; i < duration / INTERVAL; i++) {
                 Thread.sleep(INTERVAL * 1000);
                 float load = connection.getFailureDetector().determineLoad();
-                System.out.println("Server load - " + load + "s per request");
+                cumulative += load;
+                System.out.println("Server load - " + load + "s per request @" + (i + 1) * INTERVAL + "s");
             }
         } catch (RemoteException e) {
             System.err.println("Unable to determine server load - " + e);
@@ -51,5 +53,6 @@ public class RunSimulation {
         } catch (IOException e) {
             System.err.println("Unable to parse input " + e);
         }
+        System.out.println("Finished! Average - " + cumulative / (duration / INTERVAL));
     }
 }
